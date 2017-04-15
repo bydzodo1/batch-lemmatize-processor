@@ -2,16 +2,21 @@ package main.kt.cz.bydzodo1.batchLemmatizationProcessor
 
 import cz.bydzodo1.batchLemmatizationProcessor.CommandLineExecutor.CommandLineExecutor
 import cz.bydzodo1.batchLemmatizationProcessor.logger.CustomLogger
-import cz.bydzodo1.batchLemmatizationProcessor.model.*
+import cz.bydzodo1.batchLemmatizationProcessor.model.CommandProvider
+import cz.bydzodo1.batchLemmatizationProcessor.model.CommandResult
+import cz.bydzodo1.batchLemmatizationProcessor.model.CommandResultProvider
+import cz.bydzodo1.batchLemmatizationProcessor.model.Settings
 import cz.bydzodo1.batchLemmatizationProcessor.model.generatingOutput.OutputFileProvider
-import java.io.*
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.InputStreamReader
+import java.nio.file.FileAlreadyExistsException
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import kotlin.collections.HashMap
-import java.nio.file.Files
-
-
 
 
 open class Application {
@@ -26,7 +31,7 @@ open class Application {
     val commandLineExecutor = CommandLineExecutor()
     val outputFileProvider = OutputFileProvider()
 
-    val tempDir = Files.createTempDirectory("tempBatchLemmatization")
+    val tempDir = File("temp${Date().time}/")
 
     companion object {
         @JvmStatic fun main(args: Array<String>) {
@@ -43,6 +48,15 @@ open class Application {
     // first arg is morphodita run_tagger, second is tagger file, third is dir with input files
     open fun run(args: Array<String>) {
         val start = Date().time
+
+        try {
+            Files.createDirectory(tempDir.toPath())
+        }catch (e: FileAlreadyExistsException){
+            File(tempDir.absolutePath).listFiles()?.forEach { it.delete() }
+        }
+        File(tempDir.absolutePath).setWritable(true)
+        File(tempDir.absolutePath).setExecutable(true)
+
         readParams(args)
         readFilesToLemmatize()
         logger.appInfo("There are ${files.size} to lemmatize")
@@ -50,16 +64,18 @@ open class Application {
         val commandProvider = CommandProvider(settings)
 
         val pairs = mutableListOf<Pair<String, Path>>()
-        val commands = commandProvider.getCommands(files, pairs, tempDir)
+        val commands = commandProvider.getCommands(files, pairs, tempDir.toPath())
 
         logger.processing("Processing files")
+        logger.processing("temp dir "+ tempDir.absolutePath)
 
         logger.processing("Running ${commands.size} commands in parallel")
+        logger.processing("Commands are trimmed, because e.g. Windows can handle only 8192 characters in one command")
         logger.emptyLine()
         commands.parallelStream().forEach({
             val index = commands.indexOf(it) +1
             logger.processing("Running command ($index/${commands.size}) which is trimmed to ~7000 chars. Real length is ${it.length}")
-            commandLineExecutor.execute(it, index)
+            commandLineExecutor.execute(it, tempDir.toPath())
             logger.processing("Command $index successfully done")
         })
         logger.emptyLine()
@@ -74,8 +90,9 @@ open class Application {
                 val commandResult = commandResultProvider.getCommandResult(inputStream)
                 commandResults.put(fileName, commandResult)
             } catch (e: FileNotFoundException){
-                logger.error("File ${tempFilePath.toFile().absolutePath} was not found. It has maybe not be created")
                 logger.error(e.localizedMessage)
+            } catch (e: UninitializedPropertyAccessException){
+                logger.error("It was not able to process file. It is empty maybe")
             }
 
         })
@@ -97,6 +114,7 @@ open class Application {
             val reader = BufferedReader(InputStreamReader(System.`in`))
             reader.readLine()
         }
+        tempDir.deleteRecursively()
         System.exit(0)
     }
 

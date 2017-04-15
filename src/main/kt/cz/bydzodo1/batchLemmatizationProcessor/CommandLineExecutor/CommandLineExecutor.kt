@@ -1,18 +1,12 @@
 package cz.bydzodo1.batchLemmatizationProcessor.CommandLineExecutor
 
-import org.springframework.stereotype.Component
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.nio.file.Path
 
-
-@Component
 class CommandLineExecutor {
 
-    fun execute(command: String, commandID: Int) {
+    fun execute(command: String, tempDir: Path) {
         val r = Runtime.getRuntime()
-        val p = r.exec(command)
-        val reader = BufferedReader(InputStreamReader(p.getInputStream()))
+        val p = r.exec(command, null, tempDir.toFile())
         p.waitFor()
-        println("Command $commandID: " + reader.readText())
     }
 }

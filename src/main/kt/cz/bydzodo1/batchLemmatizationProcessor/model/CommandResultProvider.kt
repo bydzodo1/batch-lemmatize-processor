@@ -14,9 +14,7 @@ class CommandResultProvider {
         val jc = JAXBContext.newInstance(Sentences::class.java)
         val unmarshaller = jc.createUnmarshaller()
         val sentences = unmarshaller.unmarshal(inputStream) as Sentences
-
         return CommandResult(sentences.sentences)
-
     }
 
 }
