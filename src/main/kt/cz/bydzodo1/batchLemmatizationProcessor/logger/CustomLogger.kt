@@ -9,7 +9,7 @@ class CustomLogger private constructor(){
     }
 
     fun appInfo(info: String){
-        println("** App info **: $info")
+        println(info)
     }
 
     fun error(message: String){
@@ -17,7 +17,7 @@ class CustomLogger private constructor(){
     }
 
     fun emptyLine(){
-        println("**")
+        println()
     }
 
     fun exit(message: String){
@@ -26,6 +26,6 @@ class CustomLogger private constructor(){
     }
 
     fun processing(message: String){
-        println(message)
+        println("x_ "+message)
     }
 }

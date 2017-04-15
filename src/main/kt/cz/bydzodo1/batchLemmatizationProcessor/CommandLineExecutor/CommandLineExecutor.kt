@@ -7,8 +7,9 @@ import java.io.InputStreamReader
 @Component
 class CommandLineExecutor {
 
-    fun execute(command: String): String {
-        val p = Runtime.getRuntime().exec(command)
-        return "<sentences>"+InputStreamReader(p.inputStream).readText()+"</sentences>"
+    fun execute(command: String) {
+        val r = Runtime.getRuntime()
+        val p = r.exec(command)
+        p.waitFor()
     }
 }

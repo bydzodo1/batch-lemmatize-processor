@@ -3,17 +3,15 @@ package main.kt.cz.bydzodo1.batchLemmatizationProcessor
 import cz.bydzodo1.batchLemmatizationProcessor.CommandLineExecutor.CommandLineExecutor
 import cz.bydzodo1.batchLemmatizationProcessor.logger.CustomLogger
 import cz.bydzodo1.batchLemmatizationProcessor.model.*
-import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.File
-import java.io.InputStreamReader
-import java.io.Reader
+import cz.bydzodo1.batchLemmatizationProcessor.model.generatingOutput.OutputFileProvider
+import java.io.*
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.Instant
 import java.util.*
-import java.util.stream.Stream
 import kotlin.collections.HashMap
+import java.nio.file.Files
+
+
 
 
 open class Application {
@@ -27,6 +25,8 @@ open class Application {
     val commandResultProvider = CommandResultProvider()
     val commandLineExecutor = CommandLineExecutor()
     val outputFileProvider = OutputFileProvider()
+
+    val tempDir = Files.createTempDirectory("tempBatchLemmatization")
 
     companion object {
         @JvmStatic fun main(args: Array<String>) {
@@ -42,21 +42,39 @@ open class Application {
 
     // first arg is morphodita run_tagger, second is tagger file, third is dir with input files
     open fun run(args: Array<String>) {
+        val start = Date().time
         readParams(args)
         readFilesToLemmatize()
+        logger.appInfo("There are ${files.size} to lemmatize")
 
         val commandProvider = CommandProvider(settings)
-        files.asList().parallelStream().forEach {
-            val start = Date().time
-            logger.processing("Processing file ${it.name}")
-            val command = commandProvider.getCommand(it)
-            val executed = commandLineExecutor.execute(command)
-            val commandResult = commandResultProvider.getCommandResult(InputStreamReader(executed.byteInputStream()))
-            commandResults.put(it.name, commandResult)
-            logger.processing("${it.name} processed for ${Date().time - start}ms")
-        }
-        logger.appInfo("All files have been successfully lemmatized. Let's make a report")
-        val outputFile = outputFileProvider.outputFile(commandResults)
+
+        val pairs = mutableListOf<Pair<String, Path>>()
+        val commands = commandProvider.getCommands(files, pairs)
+
+        logger.processing("Processing files")
+
+        logger.processing("Running ${commands.size} commands in parallel")
+        logger.emptyLine()
+        commands.parallelStream().forEach({
+            val index = commands.indexOf(it) +1
+            logger.processing("Running command ($index/${commands.size}) which is trimmed to ~7000 chars. Real length is ${it.length}")
+            commandLineExecutor.execute(it)
+            logger.processing("Command $index successfully done")
+        })
+        logger.emptyLine()
+
+        pairs.forEach({
+            val fileName = it.first
+            val tempFilePath = it.second
+
+            val inputStream = InputStreamReader(tempFilePath.toFile().inputStream())
+            val commandResult = commandResultProvider.getCommandResult(inputStream)
+            commandResults.put(fileName, commandResult)
+        })
+        val interval = Date().time - start
+        logger.appInfo("All files have been successfully lemmatized to ${interval}ms. Let's make a report")
+        outputFileProvider.outputFile(commandResults)
     }
 
     private fun getPath(): Path {
