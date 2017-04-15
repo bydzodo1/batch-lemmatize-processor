@@ -37,11 +37,21 @@ open class Application {
         @JvmStatic fun main(args: Array<String>) {
             val start = Date().time
             val app = Application()
-            app.run(args)
+            app.start(args)
 
             val end = Date().time
             val interval = end - start
             app.shutdown("Everything is done for $interval ms, good bye", true)
+        }
+    }
+
+    open fun start(args: Array<String>){
+        try {
+            this.run(args)
+        } catch (e: Exception){
+            throw e
+        } finally {
+            tempDir.deleteRecursively()
         }
     }
 
@@ -75,7 +85,7 @@ open class Application {
         commands.parallelStream().forEach({
             val index = commands.indexOf(it) +1
             logger.processing("Running command ($index/${commands.size}) which is trimmed to ~7000 chars. Real length is ${it.length}")
-            commandLineExecutor.execute(it, tempDir.toPath())
+            commandLineExecutor.execute(it, index) //, tempDir.toPath()
             logger.processing("Command $index successfully done")
         })
         logger.emptyLine()
