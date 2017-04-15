@@ -9,6 +9,6 @@ class CommandLineExecutor {
 
     fun execute(command: String): String {
         val p = Runtime.getRuntime().exec(command)
-        return InputStreamReader(p.inputStream).readText()
+        return "<sentences>"+InputStreamReader(p.inputStream).readText()+"</sentences>"
     }
 }
