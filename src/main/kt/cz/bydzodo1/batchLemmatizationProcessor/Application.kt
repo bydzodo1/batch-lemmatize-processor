@@ -69,12 +69,19 @@ open class Application {
             val fileName = it.first
             val tempFilePath = it.second
 
-            val inputStream = InputStreamReader(tempFilePath.toFile().inputStream())
-            val commandResult = commandResultProvider.getCommandResult(inputStream)
-            commandResults.put(fileName, commandResult)
+            try{
+                val inputStream = InputStreamReader(tempFilePath.toFile().inputStream())
+                val commandResult = commandResultProvider.getCommandResult(inputStream)
+                commandResults.put(fileName, commandResult)
+            } catch (e: FileNotFoundException){
+                logger.error("File ${tempFilePath.toFile().absolutePath} was not found. It has maybe not be created")
+                logger.error(e.localizedMessage)
+            }
+
         })
         val interval = Date().time - start
         logger.appInfo("All files have been successfully lemmatized to ${interval}ms. Let's make a report")
+        logger.appInfo("There are ${commandResults.size} results found")
         outputFileProvider.outputFile(commandResults)
     }
 
