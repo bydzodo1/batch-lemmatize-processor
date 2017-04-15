@@ -50,7 +50,7 @@ open class Application {
         val commandProvider = CommandProvider(settings)
 
         val pairs = mutableListOf<Pair<String, Path>>()
-        val commands = commandProvider.getCommands(files, pairs)
+        val commands = commandProvider.getCommands(files, pairs, tempDir)
 
         logger.processing("Processing files")
 
@@ -59,11 +59,12 @@ open class Application {
         commands.parallelStream().forEach({
             val index = commands.indexOf(it) +1
             logger.processing("Running command ($index/${commands.size}) which is trimmed to ~7000 chars. Real length is ${it.length}")
-            commandLineExecutor.execute(it)
+            commandLineExecutor.execute(it, index)
             logger.processing("Command $index successfully done")
         })
         logger.emptyLine()
 
+        println("Going to process lemmatization results")
         pairs.forEach({
             val fileName = it.first
             val tempFilePath = it.second
