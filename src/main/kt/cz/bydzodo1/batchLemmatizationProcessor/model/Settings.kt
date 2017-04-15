@@ -1,7 +1,7 @@
-package cz.bydzodo1.batchLemmatizationProcessor
+package cz.bydzodo1.batchLemmatizationProcessor.model
 
 
-class Settings private constructor(args: Array<String>) {
+class Settings private constructor(val args: Array<String>) {
     var MORPHODITA_OPTIONS = "--input untokenized --output xml"
 
     var morphoDiTaRunTaggerPath: String = ""
@@ -9,7 +9,7 @@ class Settings private constructor(args: Array<String>) {
     var inputFolder = ""
 
     companion object{
-        fun getSettings(args: Array<String>): Settings{
+        fun getSettings(args: Array<String>): Settings {
             val settings = Settings(args)
             settings.processParams()
             return settings
@@ -17,8 +17,9 @@ class Settings private constructor(args: Array<String>) {
     }
 
     private fun processParams(){
-
-
+        morphoDiTaRunTaggerPath = args[0]
+        taggerDataFile = args[1]
+        inputFolder = args[2]
     }
 
     /*

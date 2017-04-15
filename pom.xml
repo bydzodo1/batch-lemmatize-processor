@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cz.bydzodo1.batchLemmatizationProcessor</groupId>
-    <artifactId>batchLemmatizationProcessor</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>run_wrapper</artifactId>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -63,6 +63,7 @@
                                 <source>src</source>
                                 <source>src/main</source>
                                 <source>src/main/kt</source>
+                                <source>src/resource</source>
                             </sourceDirs>
                         </configuration>
                     </execution>
