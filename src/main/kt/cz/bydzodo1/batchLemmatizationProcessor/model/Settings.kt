@@ -7,6 +7,7 @@ class Settings private constructor(val args: Array<String>) {
     var morphoDiTaRunTaggerPath: String = ""
     var taggerDataFile = ""
     var inputFolder = ""
+    var outputFile = ""
 
     companion object{
         fun getSettings(args: Array<String>): Settings {
@@ -20,9 +21,8 @@ class Settings private constructor(val args: Array<String>) {
         morphoDiTaRunTaggerPath = args[0]
         taggerDataFile = args[1]
         inputFolder = args[2]
+        if (args.size > 3) {
+            outputFile = args[3]
+        }
     }
-
-    /*
-    run_tagger.exe =../czech-tagger/czech-morfflex-pdt-161115.tagger C:/ukazky/texty/keZlemmatizovani.txt > D:/texty/vystup/zlemmatizovane.txt
-     */
 }

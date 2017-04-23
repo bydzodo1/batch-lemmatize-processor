@@ -1,23 +1,38 @@
 package cz.bydzodo1.batchLemmatizationProcessor.model.generatingOutput
 
 import cz.bydzodo1.batchLemmatizationProcessor.model.CommandResult
+import cz.bydzodo1.batchLemmatizationProcessor.model.Settings
 import cz.bydzodo1.batchLemmatizationProcessor.model.xmlContent.Token
+import java.io.File
 import java.io.PrintWriter
+import java.util.*
 
 
 class OutputFileProvider {
 
     val sep = ";"
 
-    val writer = PrintWriter("output.csv", "UTF-8")
+    val date = Date().toString()
+    val fileName = "Result$date.csv"
+    lateinit var writer: PrintWriter
     var columns: MutableList<Column> = mutableListOf()
 
-    fun outputFile(commandResults: HashMap<String, CommandResult>) {
+    fun outputFile(commandResults: HashMap<String, CommandResult>, outputFile: File? = null) {
+        var file: File? = null
+        if (outputFile == null){
+            writer = PrintWriter(fileName, "UTF-8")
+            file = File(fileName)
+        } else {
+            writer = PrintWriter(outputFile, "UTF-8")
+            file = outputFile
+        }
+
         createColumns(commandResults.map { it.value })
 
         writeHeader()
         writeBody(commandResults)
 
+        println("Result file has been saved - ${file.absolutePath}")
         writer.close()
     }
 

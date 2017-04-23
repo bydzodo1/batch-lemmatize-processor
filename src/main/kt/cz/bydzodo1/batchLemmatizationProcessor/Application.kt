@@ -55,7 +55,7 @@ open class Application {
         }
     }
 
-    // first arg is morphodita run_tagger, second is tagger file, third is dir with input files
+    // first arg is morphodita run_tagger, second is tagger file, third is dir with input files, forth optional output file
     open fun run(args: Array<String>) {
         val start = Date().time
 
@@ -109,7 +109,11 @@ open class Application {
         val interval = Date().time - start
         logger.appInfo("All files have been successfully lemmatized to ${interval}ms. Let's make a report")
         logger.appInfo("There are ${commandResults.size} results found")
-        outputFileProvider.outputFile(commandResults)
+        if (settings.outputFile != ""){
+            outputFileProvider.outputFile(commandResults, File(settings.outputFile))
+        } else {
+            outputFileProvider.outputFile(commandResults)
+        }
     }
 
     private fun getPath(): Path {
@@ -129,11 +133,12 @@ open class Application {
     }
 
     private fun help() {
-        logger.appInfo("please follow this: java -jar run_wrapper.jar run_tagger datamodel.tagger inputFolder [outputFile]")
+        logger.appInfo("please follow this: java -jar run_wrapper.jar run_tagger(morphodita tools) datamodel.tagger(morphodita data model) inputFolder [outputFile]")
     }
 
     fun readParams(args: Array<String>) {
-        val params = arrayOf("/home/dominik/repository/batch-lemmatize-processor/bin-linux64/run_tagger", "/home/dominik/repository/batch-lemmatize-processor/czech-tagger/czech-morfflex-pdt-161115.tagger", "/home/dominik/repository/batch-lemmatize-processor/inputs")
+        val params = args
+//        val params = arrayOf("/home/dominik/repository/batch-lemmatize-processor/bin-linux64/run_tagger", "/home/dominik/repository/batch-lemmatize-processor/czech-tagger/czech-morfflex-pdt-161115.tagger", "/home/dominik/repository/batch-lemmatize-processor/inputs")
         if (params.any({ it == "help" })) {
             help()
             shutdown("help", false)
