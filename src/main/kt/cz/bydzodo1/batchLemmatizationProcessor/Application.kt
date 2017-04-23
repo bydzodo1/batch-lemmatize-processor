@@ -21,6 +21,7 @@ import kotlin.collections.HashMap
 
 open class Application {
 
+    private val TEMP_DIR_ATTEMPTS = 10000
     lateinit var settings: Settings
     lateinit var files: Array<File>
 
@@ -31,7 +32,7 @@ open class Application {
     val commandLineExecutor = CommandLineExecutor()
     val outputFileProvider = OutputFileProvider()
 
-    val tempDir = File("temp${Date().time}/")
+    lateinit var tempDir: File
 
     companion object {
         @JvmStatic fun main(args: Array<String>) {
@@ -45,11 +46,14 @@ open class Application {
         }
     }
 
-    open fun start(args: Array<String>){
+    open fun start(args: Array<String>) {
         try {
+            tempDir = createTempDir()
             this.run(args)
-        } catch (e: Exception){
+        } catch (e: Exception) {
             throw e
+        } catch (e: IllegalStateException) {
+            println(e.localizedMessage)
         } finally {
             tempDir.deleteRecursively()
         }
@@ -61,7 +65,7 @@ open class Application {
 
         try {
             Files.createDirectory(tempDir.toPath())
-        }catch (e: FileAlreadyExistsException){
+        } catch (e: FileAlreadyExistsException) {
             File(tempDir.absolutePath).listFiles()?.forEach { it.delete() }
         }
         File(tempDir.absolutePath).setWritable(true)
@@ -77,13 +81,13 @@ open class Application {
         val commands = commandProvider.getCommands(files, pairs, tempDir.toPath())
 
         logger.processing("Processing files")
-        logger.processing("temp dir "+ tempDir.absolutePath)
+        logger.processing("temp dir " + tempDir.absolutePath)
 
         logger.processing("Running ${commands.size} commands in parallel")
         logger.processing("Commands are trimmed, because e.g. Windows can handle only 8192 characters in one command")
         logger.emptyLine()
         commands.parallelStream().forEach({
-            val index = commands.indexOf(it) +1
+            val index = commands.indexOf(it) + 1
             logger.processing("Running command ($index/${commands.size}) which is trimmed to ~7000 chars. Real length is ${it.length}")
             commandLineExecutor.execute(it, index) //, tempDir.toPath()
             logger.processing("Command $index successfully done")
@@ -95,13 +99,13 @@ open class Application {
             val fileName = it.first
             val tempFilePath = it.second
 
-            try{
+            try {
                 val inputStream = InputStreamReader(tempFilePath.toFile().inputStream())
                 val commandResult = commandResultProvider.getCommandResult(inputStream)
                 commandResults.put(fileName, commandResult)
-            } catch (e: FileNotFoundException){
+            } catch (e: FileNotFoundException) {
                 logger.error(e.localizedMessage)
-            } catch (e: UninitializedPropertyAccessException){
+            } catch (e: UninitializedPropertyAccessException) {
                 logger.error("It was not able to process file. It is empty maybe")
             }
 
@@ -109,7 +113,7 @@ open class Application {
         val interval = Date().time - start
         logger.appInfo("All files have been successfully lemmatized to ${interval}ms. Let's make a report")
         logger.appInfo("There are ${commandResults.size} results found")
-        if (settings.outputFile != ""){
+        if (settings.outputFile != "") {
             outputFileProvider.outputFile(commandResults, File(settings.outputFile))
         } else {
             outputFileProvider.outputFile(commandResults)
@@ -167,5 +171,21 @@ open class Application {
         }
 
         logger.appInfo("There are ${files.size} to lemmatize")
+    }
+
+
+    fun createTempDir(): File {
+        val baseDir = File(System.getProperty("java.io.tmpdir"))
+        val baseName = System.currentTimeMillis().toString() + "-"
+
+        for (counter in 0..TEMP_DIR_ATTEMPTS - 1) {
+            val tempDir = File(baseDir, baseName + counter)
+            if (tempDir.mkdir()) {
+                return tempDir
+            }
+        }
+        throw IllegalStateException("Failed to create directory within "
+                + TEMP_DIR_ATTEMPTS + " attempts (tried "
+                + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')')
     }
 }

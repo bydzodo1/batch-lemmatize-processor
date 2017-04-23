@@ -1,8 +1,7 @@
 package cz.bydzodo1.batchLemmatizationProcessor.CommandLineExecutor
 
-import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.SystemUtils
 import java.io.File
-import java.nio.file.Path
 import java.io.PrintWriter
 import java.util.*
 
