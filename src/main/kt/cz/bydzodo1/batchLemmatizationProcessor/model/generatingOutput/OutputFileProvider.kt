@@ -84,7 +84,6 @@ class OutputFileProvider {
                 columns.add(Column(index, tag))
             }
         })
-
     }
 
 }

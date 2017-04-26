@@ -73,7 +73,7 @@ open class Application {
 
         readParams(args)
         readFilesToLemmatize()
-        logger.appInfo("There are ${files.size} to lemmatize")
+        logger.appInfo("There are ${files.size} files to lemmatize")
 
         val commandProvider = CommandProvider(settings)
 
@@ -83,14 +83,15 @@ open class Application {
         logger.processing("Processing files")
         logger.processing("temp dir " + tempDir.absolutePath)
 
-        logger.processing("Running ${commands.size} commands in parallel")
-        logger.processing("Commands are trimmed, because e.g. Windows can handle only 8192 characters in one command")
+        if (commands.size > 1){
+            logger.processing("Running ${commands.size} commands in parallel")
+        }
         logger.emptyLine()
         commands.parallelStream().forEach({
             val index = commands.indexOf(it) + 1
-            logger.processing("Running command ($index/${commands.size}) which is trimmed to ~7000 chars. Real length is ${it.length}")
-            commandLineExecutor.execute(it, index) //, tempDir.toPath()
-            logger.processing("Command $index successfully done")
+            logger.processing("Running command ($index/${commands.size}) which length is ${it.length}")
+            commandLineExecutor.execute(it, index)
+            logger.processing("Command $index done")
         })
         logger.emptyLine()
 
@@ -169,8 +170,6 @@ open class Application {
         if (files.isEmpty()) {
             shutdown("There are no files to lemmatize in input folder")
         }
-
-        logger.appInfo("There are ${files.size} to lemmatize")
     }
 
 
