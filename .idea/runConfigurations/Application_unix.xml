@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Application-unix" type="JetRunConfigurationType" factoryName="Kotlin">
+    <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+    <option name="MAIN_CLASS_NAME" value="cz.bydzodo1.batchLemmatizationProcessor.Application" />
+    <option name="VM_PARAMETERS" value="" />
+    <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/../../../morphodita-1.9.2-bin-/bin-linux64/run_tagger.exe $PROJECT_DIR$/../../../morphodita-1.9.2-bin/czech-tagger/czech-morfflex-pdt-161115.tagger $PROJECT_DIR$/../../../samples/inputs" />
+    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <option name="PASS_PARENT_ENVS" value="true" />
+    <module name="batch-lemmatize-processor" />
+    <envs />
+    <method />
+  </configuration>
+</component>

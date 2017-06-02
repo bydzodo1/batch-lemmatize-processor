@@ -1,4 +1,4 @@
-package main.kt.cz.bydzodo1.batchLemmatizationProcessor
+package cz.bydzodo1.batchLemmatizationProcessor
 
 import cz.bydzodo1.batchLemmatizationProcessor.CommandLineExecutor.CommandLineExecutor
 import cz.bydzodo1.batchLemmatizationProcessor.logger.CustomLogger
@@ -21,8 +21,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 
-
-
 open class Application {
 
     private val TEMP_DIR_ATTEMPTS = 10000
@@ -35,6 +33,7 @@ open class Application {
     val commandResultProvider = CommandResultProvider()
     val commandLineExecutor = CommandLineExecutor()
     val outputFileProvider = OutputFileProvider()
+    val deleteMeAtEnd: MutableList<File> = mutableListOf()
 
     lateinit var tempDir: File
 
@@ -60,6 +59,9 @@ open class Application {
             println(e.localizedMessage)
         } finally {
             tempDir.deleteRecursively()
+            deleteMeAtEnd.forEach {
+                it.delete()
+            }
         }
     }
 
@@ -84,12 +86,6 @@ open class Application {
         val pairs = mutableListOf<Pair<String, Path>>()
         val commands = commandProvider.getCommands(files, pairs, tempDir.toPath())
 
-//        commands.parallelStream().forEach({
-//            val index = commands.indexOf(it) + 1
-//            logger.processing("Running command ($index/${commands.size}) which length is ${it.length}")
-//            commandLineExecutor.execute(it, index)
-//            logger.processing("Command $index done")
-//        })
         logger.emptyLine()
         println("please, run these script and then press enter")
 
@@ -207,13 +203,14 @@ open class Application {
                 + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')')
     }
 
-    private fun createFileCommand(command: String, index: Int): String{
+    private fun createFileCommand(command: String, index: Int): String {
         val commandName = "command$index" + if (SystemUtils.isWindows()) ".bat" else if(SystemUtils.isUnix())".sh" else ".tmp"
         val demonstrateFile = File(commandName)
         demonstrateFile.setExecutable(true)
         val demonstratewriter = PrintWriter(demonstrateFile, "UTF-8")
         demonstratewriter.print(command)
         demonstratewriter.close()
+        deleteMeAtEnd.add(demonstrateFile)
         return demonstrateFile.absoluteFile.toString()
     }
 }
