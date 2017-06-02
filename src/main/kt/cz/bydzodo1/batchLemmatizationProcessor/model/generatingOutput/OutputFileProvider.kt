@@ -12,7 +12,7 @@ class OutputFileProvider {
 
     val sep = ";"
 
-    val date = Date().toString()
+    val date = Date().time.toString()
     val fileName = "Result$date.csv"
     lateinit var writer: PrintWriter
     var columns: MutableList<Column> = mutableListOf()
@@ -79,7 +79,7 @@ class OutputFileProvider {
         })
         tagColumns.forEach({
             val index = it.key
-            val tags = it.value
+            val tags = it.value.sorted()
             for(tag in tags){
                 columns.add(Column(index, tag))
             }

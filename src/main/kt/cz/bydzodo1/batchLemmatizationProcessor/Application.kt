@@ -7,16 +7,20 @@ import cz.bydzodo1.batchLemmatizationProcessor.model.CommandResult
 import cz.bydzodo1.batchLemmatizationProcessor.model.CommandResultProvider
 import cz.bydzodo1.batchLemmatizationProcessor.model.Settings
 import cz.bydzodo1.batchLemmatizationProcessor.model.generatingOutput.OutputFileProvider
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.InputStreamReader
+import cz.bydzodo1.batchLemmatizationProcessor.util.SystemUtils
+import java.io.*
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import kotlin.collections.HashMap
+import com.sun.xml.internal.ws.streaming.XMLStreamReaderUtil.close
+import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
+
 
 
 open class Application {
@@ -80,44 +84,59 @@ open class Application {
         val pairs = mutableListOf<Pair<String, Path>>()
         val commands = commandProvider.getCommands(files, pairs, tempDir.toPath())
 
-        logger.processing("Processing files")
-        logger.processing("temp dir " + tempDir.absolutePath)
-
-        if (commands.size > 1){
-            logger.processing("Running ${commands.size} commands in parallel")
-        }
+//        commands.parallelStream().forEach({
+//            val index = commands.indexOf(it) + 1
+//            logger.processing("Running command ($index/${commands.size}) which length is ${it.length}")
+//            commandLineExecutor.execute(it, index)
+//            logger.processing("Command $index done")
+//        })
         logger.emptyLine()
-        commands.parallelStream().forEach({
+        println("please, run these script and then press enter")
+
+        val fileNames = arrayListOf<String>()
+        commands.forEach({
             val index = commands.indexOf(it) + 1
-            logger.processing("Running command ($index/${commands.size}) which length is ${it.length}")
-            commandLineExecutor.execute(it, index)
-            logger.processing("Command $index done")
+            fileNames.add(createFileCommand(it, index))
         })
+        println(createFileCommand(fileNames.joinToString(" && "), 0))
         logger.emptyLine()
 
-        println("Going to process lemmatization results")
+        println("press enter to continue ...")
+        System.`in`.read()
+
+        logger.emptyLine()
+
+        var success = true
         pairs.forEach({
             val fileName = it.first
             val tempFilePath = it.second
-
             try {
                 val inputStream = InputStreamReader(tempFilePath.toFile().inputStream())
                 val commandResult = commandResultProvider.getCommandResult(inputStream)
                 commandResults.put(fileName, commandResult)
             } catch (e: FileNotFoundException) {
                 logger.error(e.localizedMessage)
+                success = false
+                return
             } catch (e: UninitializedPropertyAccessException) {
+                success = false
                 logger.error("It was not able to process file. It is empty maybe")
+                return
+            } catch (e: Exception){
+                success = false
+                return
             }
-
         })
-        val interval = Date().time - start
-        logger.appInfo("All files have been successfully lemmatized to ${interval}ms. Let's make a report")
-        logger.appInfo("There are ${commandResults.size} results found")
-        if (settings.outputFile != "") {
-            outputFileProvider.outputFile(commandResults, File(settings.outputFile))
+        if (success){
+            val interval = Date().time - start
+            logger.appInfo("All files have been successfully lemmatized to ${interval}ms. Let's make a report")
+            if (settings.outputFile != "") {
+                outputFileProvider.outputFile(commandResults, File(settings.outputFile))
+            } else {
+                outputFileProvider.outputFile(commandResults)
+            }
         } else {
-            outputFileProvider.outputFile(commandResults)
+            logger.appInfo("Some error occurred. No output will be generated")
         }
     }
 
@@ -186,5 +205,15 @@ open class Application {
         throw IllegalStateException("Failed to create directory within "
                 + TEMP_DIR_ATTEMPTS + " attempts (tried "
                 + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')')
+    }
+
+    private fun createFileCommand(command: String, index: Int): String{
+        val commandName = "command$index" + if (SystemUtils.isWindows()) ".bat" else if(SystemUtils.isUnix())".sh" else ".tmp"
+        val demonstrateFile = File(commandName)
+        demonstrateFile.setExecutable(true)
+        val demonstratewriter = PrintWriter(demonstrateFile, "UTF-8")
+        demonstratewriter.print(command)
+        demonstratewriter.close()
+        return demonstrateFile.absoluteFile.toString()
     }
 }

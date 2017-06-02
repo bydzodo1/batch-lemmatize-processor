@@ -16,7 +16,7 @@ class CommandProvider(val settings: Settings) {
             val newTempFileName = tempFile.toAbsolutePath().toString() + File.separator + "tmp"+ it.name.hashCode() + ".txt"
             val pathNewTempFile = Paths.get(newTempFileName)
 //            Files.createFile(pathNewTempFile)
-            val command = "\""+it.absoluteFile + "\":" + newTempFileName
+            val command = "\"${it.absoluteFile}\":\"$newTempFileName\""
             commandBuilder.append(" ").append(command)
             pairs.add(Pair(it.name, pathNewTempFile))
             if (commandBuilder.length > 7000){
