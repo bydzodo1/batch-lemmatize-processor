@@ -24,13 +24,18 @@ run_tagger data_model inputFile1:outputFile1 inputFile2:outputFile2 ..... až do
 ### Úprava pro Windows
 (Nepřišel jsem na způsob, aby si Windows tyto skripty pustil úspěšně sám)
 Po vytvoření těchto příkazů se software zastaví a požádá uživatele o spuštění vytvořeného skriptu.
+
 `please, run these script and then press enter`
+
 `C:/../../command0.bat`
+
 `press enter to continue ...`
 
-> Spusťte tento skript
-> - Zkopírujte cestu k tomuto skriptu a spusťte tuto cestu v jiné CMD
-> - Nebo spusťte kdekoliv v CMD obsah tohoto skriptu
+#### Spusťte tento skript
+- Zkopírujte cestu k tomuto skriptu a spusťte tuto cestu v jiné CMD
+- Nebo spusťte kdekoliv v CMD obsah tohoto skriptu
+
+### Výsledek
 
 Po úspěšném vykonání skriptu pokračujte v programu stisknutím klávesy `enter`
 
